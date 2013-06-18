@@ -177,6 +177,24 @@ LIMIT is the limit of the search."
 
       ((if while debug) (sass-highlight-script-after-match)))))
 
+(defun sass-indent-line ()
+  "original: haml-indent-line
+modify the behavior when use newline-and-indent"
+  (interactive "*")
+  (let ((ci (current-indentation))
+        (cc (current-column)))
+    (destructuring-bind (need strict) (haml-compute-indentation)
+      (save-excursion
+        (beginning-of-line)
+        (delete-horizontal-space)
+        (if (and (not strict) (equal last-command this-command) (/= ci 0))
+            (indent-to (* (/ (1- ci) sass-indent-offset) sass-indent-offset))
+          (if (and (= ci 0) (/= need 0) (not (equal last-command this-command)))
+              (indent-to (- need sass-indent-offset))
+            (indent-to need)))))
+    (when (< (current-column) (current-indentation))
+      (forward-to-indentation 0))))
+
 ;; Constants
 
 ;; Mode setup
@@ -191,6 +209,7 @@ LIMIT is the limit of the search."
   (set (make-local-variable 'comment-start) "/*")
   (set (make-local-variable 'haml-indent-function) 'sass-indent-p)
   (set (make-local-variable 'haml-indent-offset) sass-indent-offset)
+  (set (make-local-variable 'indent-line-function) 'sass-indent-line)
   (setq font-lock-defaults '(sass-font-lock-keywords t t)))
 
 ;; Indentation
